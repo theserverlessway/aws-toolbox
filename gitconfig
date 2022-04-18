@@ -1,0 +1,32 @@
+[alias]
+  b = branch
+  a = add
+  c = commit -sv
+  cm = commit -svm
+  ca = commit --amend
+  co = checkout
+  cp = cherry-pick
+  d = diff
+  f = fetch
+  l = log
+  ll = log -p
+  llt = log -p trunk..
+  lt = log trunk..
+  lm = log master..
+  llm = log -p master..
+  m = merge
+  r = rebase
+  s = status
+  pl = pull
+  ps = push
+  new = checkout -b
+  ignored = clean -Xn
+  merged = branch --merged
+  unmerged = branch --no-merged
+  remove-merged = "!git branch --merged | grep -v '\\*\\|  master' | xargs -n 1 git branch -d"
+  undo = reset HEAD~1 --mixed
+  amend = commit -a --amend
+  who = shortlog -s --
+  tree = log --graph --decorate --pretty=oneline --abbrev-commit -n 10
+  feature = "!git new feature/$1 #"
+  save = !git add -A && git commit -m 'SAVEPOINT'

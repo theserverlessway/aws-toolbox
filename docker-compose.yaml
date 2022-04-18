@@ -1,0 +1,18 @@
+version: '3.7'
+services:
+  toolbox:
+    build: ./
+    working_dir: /app
+    volumes:
+      - $PWD:/app
+      - ~/.aws/:/root/.aws
+      - .dockerconfig/:/root/.docker
+      - ./bash_history:/root/.bash_history
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_PROFILE
+      - AWS_DEFAULT_REGION=eu-central-1
+      - AWS_SESSION_TOKEN
+      - AWS_CONFIG_FILE
