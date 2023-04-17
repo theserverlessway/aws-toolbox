@@ -69,6 +69,15 @@ function terraform-init {
     --reconfigure -upgrade
 }
 
+function terraform-upgrade {
+  terraform init -upgrade
+  terraform providers lock \
+    -platform=windows_amd64 \
+    -platform=darwin_amd64 \
+    -platform=linux_amd64 \
+    -platform=linux_arm
+}
+
 alias m="show_make_targets"
 
 complete -C /usr/bin/terraform terraform
@@ -123,6 +132,20 @@ alias aps='aws-profiles-switch'
 
 complete -W '$(__aws-profiles-list)' aws-profiles-switch
 complete -W '$(__aws-profiles-list)' aps
+
+function __aws-regions-list {
+  echo eu-north-1	ap-south-1	eu-west-3	eu-west-2	eu-west-1	ap-northeast-3	ap-northeast-2	ap-northeast-1	sa-east-1	ca-central-1	ap-southeast-1	ap-southeast-2	eu-central-1	us-east-1	us-east-2	us-west-1	us-west-2
+}
+
+function aws-regions-switch {
+  export AWS_DEFAULT_REGION=$1 AWS_REGION=$1
+}
+
+alias arl='__aws-regions-list'
+alias ars='aws-regions-switch'
+
+complete -W '$(__aws-regions-list)' aws-regions-switch
+complete -W '$(__aws-regions-list)' ars
 
 function ecr-login {
   AWS_REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
