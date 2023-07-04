@@ -147,7 +147,7 @@ alias ars='aws-regions-switch'
 complete -W '$(__aws-regions-list)' aws-regions-switch
 complete -W '$(__aws-regions-list)' ars
 
-function ecr-login {
+function aws-ecr-login {
   AWS_REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
   ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
   ECR_DOMAIN=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
@@ -156,3 +156,6 @@ function ecr-login {
 }
 
 export AWS_PAGER=""
+
+alias aws-ecs-tasks='awsinfo ecs tasks && awsinfo ecs tasks -s'
+alias aws-ecs-tasks-watch="watch -c \'awsinfo ecs tasks && awsinfo ecs tasks -s\'"

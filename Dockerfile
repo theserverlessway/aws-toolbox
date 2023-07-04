@@ -29,8 +29,10 @@ RUN apt-get install -y \
   vim \
   vim-tiny \
   autojump \
-  netcat \
-  tig
+  netcat-openbsd \
+  tig \
+  dnsutils \
+  sslscan
 
 
 # Docker
@@ -49,7 +51,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "aws
     unzip awscliv2.zip && \
     ./aws/install
 
-RUN wget https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(dpkg --print-architecture)/session-manager-plugin.deb
+RUN wget https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(if [ $(dpkg --print-architecture) = "amd64" ] ; then echo "64bit" ; else echo "arm64" ; fi)/session-manager-plugin.deb
 RUN dpkg -i session-manager-plugin.deb
 RUN rm session-manager-plugin.deb
 
@@ -72,6 +74,9 @@ RUN awsinfo complete > /root/.awsinfo_completion
 
 RUN git clone https://github.com/toniblyx/prowler.git /prowler
 ENV PATH="/prowler:${PATH}"
+
+RUN git clone https://github.com/OpenVPN/easy-rsa.git /easy-rsa
+ENV PATH="/easy-rsa/easyrsa3:${PATH}"
 
 COPY bashrc /root/bashrc
 RUN tr -d '\r' < /root/bashrc > /root/.bashrc && rm /root/bashrc

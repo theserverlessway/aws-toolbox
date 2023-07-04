@@ -3,8 +3,8 @@ CURRENT_WORKSPACE=$(shell terraform workspace  list | sed -n "s/^* \(\S*\)/\1/p"
 toolbox-rebuild:
 	docker-compose -f toolbox/docker-compose.yaml build --no-cache
 
-install:
-	docker build -t theserverlessway/aws-toolbox .
+release:
+	docker buildx build --push --platform=linux/amd64 -t theserverlessway/aws-toolbox .
 
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR=$(notdir $(CURDIR))
@@ -159,22 +159,3 @@ ecr-login:
 run-crawlers:
 	terraform show -json | jq '.. | select(.type == "aws_glue_crawler")? | .values.id' -r | sort | xargs -tn 1 aws glue start-crawler --name
 	awsinfo logs -s now glue crawler
-
-bucket-lifecycles-expire-all:
-	aws s3api list-buckets --output text --query "Buckets[?contains(to_string(Name),'$(CURRENT_WORKSPACE)')].[Name]" | xargs -rtn 1 aws s3api put-bucket-lifecycle-configuration --lifecycle-configuration '{"Rules":[{"Expiration":{"Days":1},"ID":"ExpireAll","Filter":{},"Status":"Enabled","NoncurrentVersionExpiration":{"NoncurrentDays":1},"AbortIncompleteMultipartUpload":{"DaysAfterInitiation":1}},{"Expiration":{"ExpiredObjectDeleteMarker":true},"ID":"ExpireAllDeleteMarkers","Filter":{},"Status":"Enabled"}]}' --bucket
-
-bucket-lifecycles-disable:
-	aws s3api list-buckets --output text --query "Buckets[?contains(to_string(Name),'$(CURRENT_WORKSPACE)')].[Name]" | xargs -rtn 1 aws s3api delete-bucket-lifecycle --bucket
-
-
-clean-bucket:
-ifndef BUCKET_NAME
-	$(error BUCKET_NAME is not set)
-endif
-	#aws s3 rm --recursive s3://$(BUCKET_NAME)
-	aws s3api delete-objects \
-    --bucket $(BUCKET_NAME) \
-    --delete "$$(aws s3api list-object-versions --max-items 500 --bucket "$(BUCKET_NAME)" --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')" | true
-	aws s3api delete-objects \
-    --bucket $(BUCKET_NAME) \
-    --delete "$$(aws s3api list-object-versions --max-items 500 --bucket "$(BUCKET_NAME)" --output=json --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')" | true
