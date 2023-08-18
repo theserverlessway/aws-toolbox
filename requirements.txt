@@ -6,3 +6,6 @@ formica-cli
 git-remote-codecommit
 scoutsuite
 fire
+black
+aws-cdk-lib
+constructs
