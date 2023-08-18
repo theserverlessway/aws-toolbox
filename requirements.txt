@@ -1,7 +1,6 @@
 ansi2html
 awsie
 boto3
-docker-compose
 former
 formica-cli
 git-remote-codecommit
