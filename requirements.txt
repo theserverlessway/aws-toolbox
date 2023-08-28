@@ -1,11 +1,12 @@
 ansi2html
+aws-cdk-lib
 awsie
+black
 boto3
+boto3-stubs-lite
+constructs
+fire
 former
 formica-cli
 git-remote-codecommit
 scoutsuite
-fire
-black
-aws-cdk-lib
-constructs

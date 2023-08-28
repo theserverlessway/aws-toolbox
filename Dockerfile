@@ -1,9 +1,6 @@
 FROM python:latest
 
 RUN apt-get clean
-# Kubectl
-RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
 
 RUN apt-get update
 
@@ -15,7 +12,6 @@ RUN apt-get install -y \
   git \
   groff \
   jq \
-  kubectl \
   less \
   make \
   python3 \
@@ -32,16 +28,21 @@ RUN apt-get install -y \
   netcat-openbsd \
   tig \
   dnsutils \
-  sslscan
+  sslscan \
+  shellcheck
 
 
 # Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-RUN apt-key fingerprint 0EBFCD88
-RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-RUN apt-get update
-RUN apt-get install -y docker-ce docker-ce-cli containerd.io
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
 
+RUN apt-get update
+RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # AWS and Python Tooling
 RUN python -m ensurepip --upgrade
@@ -56,6 +57,7 @@ RUN dpkg -i session-manager-plugin.deb
 RUN rm session-manager-plugin.deb
 
 # CDK
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && apt-get install -y nodejs
 RUN npm i -g aws-cdk
 
@@ -86,5 +88,7 @@ RUN git config --global credential.helper '!aws codecommit credential-helper $@'
 RUN git config --global credential.UseHttpPath true
 
 RUN git clone https://github.com/magicmonty/bash-git-prompt.git /bash-git-prompt --depth=1
+
+COPY ./scripts ./toolbox-scripts
 
 CMD ["/bin/bash"]

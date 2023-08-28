@@ -3,15 +3,15 @@ CURRENT_WORKSPACE=$(shell terraform workspace  list | sed -n "s/^* \(\S*\)/\1/p"
 toolbox-rebuild:
 	docker-compose -f toolbox/docker-compose.yaml build --no-cache
 
-release:
-	docker buildx build --push --platform=linux/amd64 -t theserverlessway/aws-toolbox .
-
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR=$(notdir $(CURDIR))
 
 CONTAINER_PREFIX=toolbox-$(CURRENT_DIR)
 
 CONTAINER_ID=$(shell docker ps | grep $(CONTAINER_PREFIX) | awk '{print $$1}')
+
+release:
+	docker buildx build --push --platform=linux/amd64,linux/arm64 -t docker.io/theserverlessway/aws-toolbox .
 
 current-dir:
 	echo $(CURRENT_DIR)

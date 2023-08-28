@@ -19,6 +19,7 @@ alias twl="terraform workspace list"
 alias tws="terraform workspace select"
 alias terraform-addresses="terraform show -json | jq -r '.values[].resources[].address' | sort"
 alias tad="terraform-addresses"
+alias tformat="terraform fmt -recursive ./"
 
 alias a='awsinfo'
 alias am="awsinfo me"
@@ -67,12 +68,12 @@ function terraform-init {
     -backend-config="region=$AWS_REGION" \
     -backend-config="dynamodb_table=terraform-lock-$AWS_REGION-$ACCOUNT_ID" \
     --reconfigure -upgrade
+  terraform providers lock -platform=linux_amd64 -platform=linux_arm
 }
 
 function terraform-upgrade {
   terraform init -upgrade
   terraform providers lock \
-    -platform=windows_amd64 \
     -platform=darwin_amd64 \
     -platform=linux_amd64 \
     -platform=linux_arm
@@ -108,8 +109,6 @@ function terraform-remove-lock {
   DYNAMO_TABLE=$(aws dynamodb list-tables --output text --query "TableNames[?contains(@,'terraform-lock')]")
   aws dynamodb delete-item --table-name $DYNAMO_TABLE --key "{\"LockID\":{\"S\": \"$1\"}}"
 }
-
-alias empty-bucket="python3 /app/toolbox/empty-bucket.py"
 
 source /usr/share/bash-completion/completions/git
 
@@ -159,3 +158,15 @@ export AWS_PAGER=""
 
 alias aws-ecs-tasks='awsinfo ecs tasks && awsinfo ecs tasks -s'
 alias aws-ecs-tasks-watch="watch -c \'awsinfo ecs tasks && awsinfo ecs tasks -s\'"
+
+alias ecr-login=aws-ecr-login
+
+# CURL
+
+alias c='curl'
+alias curl-headers='c --head -L -X GET'
+
+
+alias watch='watch -c'
+
+export PATH="/toolbox-scripts:$PATH"
