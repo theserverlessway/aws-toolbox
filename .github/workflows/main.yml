@@ -33,3 +33,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: theserverlessway/aws-toolbox:latest
+          cache-from: type=registry,ref=theserverlessway/aws-toolbox:buildcache
+          cache-to: type=registry,ref=theserverlessway/aws-toolbox:buildcache,mode=max
