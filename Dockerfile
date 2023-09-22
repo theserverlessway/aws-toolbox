@@ -1,10 +1,21 @@
 FROM python:latest
 
-RUN apt-get clean
+# Docker Repository
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-RUN apt-get update
+# NodeJS Repository
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
 
-RUN apt-get install -y \
+# Terraform Repository
+
+RUN apt-get update && apt-get install -y \
   apt-transport-https \
   bash \
   coreutils \
@@ -29,20 +40,16 @@ RUN apt-get install -y \
   tig \
   dnsutils \
   sslscan \
-  shellcheck
+  shellcheck \
+  docker-ce \
+  docker-ce-cli  \
+  containerd.io  \
+  docker-buildx-plugin  \
+  docker-compose-plugin \
+  nodejs \
+  terraform \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
-# Docker
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-RUN chmod a+r /etc/apt/keyrings/docker.gpg
-RUN echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-RUN apt-get update
-RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # AWS and Python Tooling
 RUN python -m ensurepip --upgrade
@@ -50,22 +57,12 @@ RUN pip3 install --upgrade pip awscli virtualenv aws-cdk-lib
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
-    ./aws/install
+    ./aws/install && rm awscliv2.zip && rm -fr ./aws
 
-RUN wget https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(if [ $(dpkg --print-architecture) = "amd64" ] ; then echo "64bit" ; else echo "arm64" ; fi)/session-manager-plugin.deb
-RUN dpkg -i session-manager-plugin.deb
-RUN rm session-manager-plugin.deb
+RUN wget https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(if [ $(dpkg --print-architecture) = "amd64" ] ; then echo "64bit" ; else echo "arm64" ; fi)/session-manager-plugin.deb && dpkg -i session-manager-plugin.deb && rm session-manager-plugin.deb
 
-# CDK
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && apt-get install -y nodejs
+# CDK Install
 RUN npm i -g aws-cdk
-
-## Terraform
-
-RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-RUN apt update && apt install terraform
 
 COPY requirements.txt ./requirements.txt
 RUN pip3 install -v -r requirements.txt
