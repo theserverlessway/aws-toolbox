@@ -51,7 +51,17 @@ RUN apt-get update && apt-get install -y \
   docker-compose-plugin \
   nodejs \
   terraform \
+  direnv \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
+  
+
+
+# Docker
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN apt-key fingerprint 0EBFCD88
+RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+RUN apt-get update
+RUN apt-get install -y docker-ce docker-ce-cli containerd.io
 
 
 # AWS and Python Tooling
