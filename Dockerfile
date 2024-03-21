@@ -13,9 +13,37 @@ RUN echo \
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
 
-# Terraform Repository
-RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+# Repository Installation Preparation
+RUN apt-get update && apt-get install -y gnupg software-properties-common && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+#Terraform Repository
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | \
+  gpg --dearmor | \
+  tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+RUN gpg --no-default-keyring \
+  --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+  --fingerprint
+RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+  https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+  tee /etc/apt/sources.list.d/hashicorp.list
+
+
+
+
+# OpenTofu Repository
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://get.opentofu.org/opentofu.gpg | tee /etc/apt/keyrings/opentofu.gpg >/dev/null
+RUN curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null
+RUN chmod a+r /etc/apt/keyrings/opentofu.gpg
+RUN echo \
+  "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main \
+  deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+  tee /etc/apt/sources.list.d/opentofu.list > /dev/null
+
+# Docker Repository
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN apt-key fingerprint 0EBFCD88
+RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
 
 RUN apt-get update && apt-get install -y \
   apt-transport-https \
@@ -49,25 +77,17 @@ RUN apt-get update && apt-get install -y \
   docker-buildx-plugin  \
   docker-compose-plugin \
   nodejs \
+  tofu \
   terraform \
-  direnv \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
-  
-# Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-RUN apt-key fingerprint 0EBFCD88
-RUN add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-RUN apt-get update
-RUN apt-get install -y docker-ce docker-ce-cli containerd.io
-
 
 # AWS and Python Tooling
 RUN python -m ensurepip --upgrade
 RUN pip3 install --upgrade pip awscli virtualenv aws-cdk-lib
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && rm awscliv2.zip && rm -fr ./aws
+  unzip awscliv2.zip && \
+  ./aws/install && rm awscliv2.zip && rm -fr ./aws
 
 RUN wget https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_$(if [ $(dpkg --print-architecture) = "amd64" ] ; then echo "64bit" ; else echo "arm64" ; fi)/session-manager-plugin.deb && dpkg -i session-manager-plugin.deb && rm session-manager-plugin.deb
 
