@@ -68,7 +68,6 @@ function terraform-init {
     -backend-config="region=$AWS_REGION" \
     -backend-config="dynamodb_table=terraform-lock-$AWS_REGION-$ACCOUNT_ID" \
     --reconfigure -upgrade
-  terraform providers lock -platform=linux_amd64 -platform=linux_arm
 }
 
 function terraform-upgrade {
@@ -112,8 +111,6 @@ function terraform-remove-lock {
 
 source /usr/share/bash-completion/completions/git
 
-alias myuniqa-test="export AWS_PROFILE=myuniqa-test"
-alias myuniqa-prod="export AWS_PROFILE=myuniqa-prod"
 alias aws-unset-token='unset AWS_SESSION_TOKEN AWS_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID'
 __git_complete g __git_main
 
